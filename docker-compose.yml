@@ -1,0 +1,80 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: alya
+      POSTGRES_PASSWORD: alya
+      POSTGRES_DB: alya
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.backend
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      # On monte ./backend dans /app/backend
+      - ./backend:/app/backend
+    working_dir: /app
+    environment:
+      # Si DATABASE_URL n'est pas déjà dans .env, on la définit ici
+      - DATABASE_URL=postgresql+psycopg://alya:alya@db:5432/alya
+    command: >
+      uvicorn backend.gateway.main:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.backend
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backend:/app/backend
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql+psycopg://alya:alya@db:5432/alya
+    command: >
+      celery -A backend.workers.worker worker
+      --loglevel=info
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.frontend
+    env_file:
+      - frontend/.env
+    volumes:
+      - ./frontend:/app/frontend
+      # On garde node_modules en cache dans le conteneur
+      - /app/frontend/node_modules
+    working_dir: /app/frontend
+    ports:
+      - "5173:5173"
+    command: >
+      npm run dev -- --host
+
+volumes:
+  db-data:
+
