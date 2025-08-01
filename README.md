@@ -7,7 +7,7 @@
 
 * Docker Desktop (Windows)
 * Git (pour cloner le dépôt)
-* Une clé Azure OpenAI + identifiants OAuth HubSpot/Trello/Slack/Gmail
+* Une clé OpenAI + identifiants OAuth HubSpot/Trello/Slack/Gmail
 
 ## Démarrage local
 
