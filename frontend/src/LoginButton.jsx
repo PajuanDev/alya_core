@@ -1,36 +1,21 @@
 import React from "react";
-import { PublicClientApplication } from "@azure/msal-browser";
-
-// ── Config MSAL B2C ─────────────────────────────────
-const msalConfig = {
-  auth: {
-    clientId: import.meta.env.VITE_B2C_CLIENT_ID,                                      // ID d’application de ta SPA
-    authority: `https://${import.meta.env.VITE_B2C_TENANT}.b2clogin.com/${import.meta.env.VITE_B2C_TENANT}.onmicrosoft.com/${import.meta.env.VITE_B2C_POLICY}`,
-    knownAuthorities: [
-      `${import.meta.env.VITE_B2C_TENANT}.b2clogin.com`
-    ],
-    redirectUri: window.location.origin
-  },
-  cache: {
-    cacheLocation: "localStorage",  // garder la session au reload
-    storeAuthStateInCookie: false
-  }
-};
-
-// Instance MSAL publique
-export const msalInstance = new PublicClientApplication(msalConfig);
-
-// Scope pour communiquer avec ton API backend
-export const apiScope = `${import.meta.env.VITE_B2C_BACKEND_APP_ID}/user_impersonation`;
 
 export default function LoginButton() {
   const handleLogin = async () => {
-    // initialise le client MSAL (v2+)
-    await msalInstance.initialize();
-    // lance le flux redirect vers Azure B2C
-    await msalInstance.loginRedirect({
-      scopes: ["openid", "profile", apiScope]
+    const email = prompt("Email ?");
+    const password = prompt("Mot de passe ?");
+    const res = await fetch("/auth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username: email, password }),
     });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem("token", data.access_token);
+      alert("Connecté !");
+    } else {
+      alert("Erreur de connexion");
+    }
   };
 
   return (
@@ -42,4 +27,3 @@ export default function LoginButton() {
     </button>
   );
 }
-
