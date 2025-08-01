@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
-import LoginButton, { msalInstance, apiScope } from "./LoginButton";
+import React, { useState } from "react";
+import LoginButton from "./LoginButton";
 import { Paperclip, Send, Bot, User } from "lucide-react";
 
 export default function App() {
-  const [initialized, setInitialized] = useState(false);
-  const [token, setToken]             = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [conversationId, setConversationId] = useState(
     () => localStorage.getItem("alya_conversation_id")
   );
@@ -12,39 +11,6 @@ export default function App() {
   const [input, setInput]       = useState("");
   const [sending, setSending]   = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      // 1) Initialiser MSAL (nécessaire pour v2+)
-      try {
-        await msalInstance.initialize();
-      } catch (e) {
-        console.warn("MSAL.initialize():", e);
-      }
-      setInitialized(true);
-
-      // 2) Gérer le retour de la page Azure (code & state dans l’URL)
-      try {
-        const resp = await msalInstance.handleRedirectPromise();
-        const account = resp?.account || msalInstance.getAllAccounts()[0];
-        if (!account) {
-          // pas encore connecté → afficher LoginButton
-          return;
-        }
-        msalInstance.setActiveAccount(account);
-
-        // 3) Acquérir silencieusement un token pour votre API
-        const tokenResp = await msalInstance.acquireTokenSilent({
-          account,
-          scopes: [apiScope]
-        });
-        setToken(tokenResp.accessToken);
-      } catch (e) {
-        console.error("MSAL auth error:", e);
-      }
-    })();
-  }, []);
-
-  if (!initialized) return null;
 
   if (!token) {
     return (

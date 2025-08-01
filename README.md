@@ -22,6 +22,12 @@ docker compose up --build
 - API Gateway: http://localhost:8000
 - Frontend : http://localhost:5173
 
+### Authentification locale
+
+Créez un compte via `POST /auth/register` puis obtenez un token avec
+`POST /auth/token` (OAuth2 password flow). Utilisez ce jeton Bearer pour
+les requêtes protégées.
+
 ## Structure du projet
 
 ```

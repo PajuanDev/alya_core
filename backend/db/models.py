@@ -14,6 +14,7 @@ class User(Base):
         default=uuid.uuid4
     )
     email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=datetime.utcnow,
