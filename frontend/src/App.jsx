@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import LoginButton from "./LoginButton";
+import SignupButton from "./SignupButton";
 import { Paperclip, Send, Bot, User } from "lucide-react";
 
 export default function App() {
@@ -14,8 +15,9 @@ export default function App() {
 
   if (!token) {
     return (
-      <div className="flex h-screen items-center justify-center bg-neutral-50">
+      <div className="flex h-screen items-center justify-center bg-neutral-50 gap-4">
         <LoginButton />
+        <SignupButton />
       </div>
     );
   }
