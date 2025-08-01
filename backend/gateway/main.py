@@ -7,8 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-from openai import AzureOpenAI
+from openai import OpenAI
 
 from backend.auth import router as auth_router, current_user, get_db, User as AuthUser
 from backend.db.models import Conversation, Message
@@ -16,25 +15,21 @@ from backend.db.models import Conversation, Message
 # ── Charger les variables d’environnement
 load_dotenv()
 
-# ── Configuration Azure OpenAI
-endpoint    = os.getenv("AZURE_OPENAI_ENDPOINT")
-deployment  = os.getenv("AZURE_OPENAI_DEPLOYMENT")
-api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2025-04-15-preview")
+# ── Configuration OpenAI
+openai_key  = os.getenv("OPENAI_API_KEY")
+openai_model = os.getenv("OPENAI_MODEL", "gpt-4o")
+base_url    = os.getenv("OPENAI_BASE_URL")
 
-token_provider = get_bearer_token_provider(
-    DefaultAzureCredential(),
-    "https://cognitiveservices.azure.com/.default",
-)
-
-client = AzureOpenAI(
-    azure_endpoint          = endpoint,
-    azure_ad_token_provider = token_provider,
-    api_version             = api_version,
-)
+client = OpenAI(api_key=openai_key, base_url=base_url)
 
 # ── Initialisation FastAPI
 app = FastAPI(title="Alya Gateway")
 app.include_router(auth_router)
+
+# ── Root endpoint for basic connectivity
+@app.get("/")
+def index():
+    return {"message": "Alya Gateway API"}
 
 # ── Schémas Pydantic
 class ChatRequest(BaseModel):
@@ -89,7 +84,7 @@ def chat(
     # 4) Appel au modèle
     try:
         completion = client.chat.completions.create(
-            model       = deployment,
+            model       = openai_model,
             messages    = openai_history,
             max_tokens  = 800,
             temperature = 0.7,
